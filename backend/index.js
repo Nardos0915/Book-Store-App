@@ -1,7 +1,7 @@
 import express from 'express';
-import { PORT, mongoDBURL } from './config.js';
+import { PORT, mongoDBURL, CORS_ORIGIN } from './config.js';
 import mongoose from 'mongoose';
-import booksRoute from './routes/bookRoutes.js';
+import bookRoutes from './routes/bookRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -14,16 +14,11 @@ const app = express();
 app.use(express.json());
 
 // Middleware for handling CORS POLICY
-// Option 1: Allow All Origins with Default of cors(*)
-app.use(cors());
-// Option 2: Allow Custom Origins
-// app.use(
-//   cors({
-//     origin: 'http://localhost:3000',
-//     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-//     allowedHeaders: ['Content-Type'],
-//   })
-// );
+app.use(cors({
+  origin: CORS_ORIGIN,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 
 app.get('/', (request, response) => {
   console.log(request);
@@ -31,7 +26,7 @@ app.get('/', (request, response) => {
 });
 
 // Routes
-app.use('/api/books', booksRoute);
+app.use('/api/books', bookRoutes);
 app.use('/api/users', userRoutes);
 
 mongoose
