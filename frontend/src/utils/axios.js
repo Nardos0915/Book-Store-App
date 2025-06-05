@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5555/api',
+  baseURL:'https://book-store-app-5.onrender.com/api',
 });
 
 // Add a request interceptor
