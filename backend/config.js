@@ -8,8 +8,8 @@ export const mongoDBURL = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/
 
 export const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_here';
 
-// Add CORS origin for production
-export const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:5173';
+// Add CORS origin for development
+export const CORS_ORIGIN = process.env.CORS_ORIGIN || ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000'];
 
 // Please create a free database for yourself.
 // This database will be deleted after tutorial

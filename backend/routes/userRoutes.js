@@ -11,30 +11,18 @@ const generateToken = (id) => {
   });
 };
 
-// Register a new user
-router.post('/register', async (req, res) => {
+// Get user profile
+router.get('/profile', async (req, res) => {
   try {
-    const { name, email, password } = req.body;
-
-    const userExists = await User.findOne({ email });
-
-    if (userExists) {
-      return res.status(400).json({ message: 'User already exists' });
-    }
-
-    const user = await User.create({
-      name,
-      email,
-      password,
-    });
-
+    const user = await User.findById(req.user._id);
     if (user) {
-      res.status(201).json({
+      res.json({
         _id: user._id,
-        name: user.name,
+        username: user.username,
         email: user.email,
-        token: generateToken(user._id),
       });
+    } else {
+      res.status(404).json({ message: 'User not found' });
     }
   } catch (error) {
     console.error(error);
@@ -42,22 +30,25 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// Login user
-router.post('/login', async (req, res) => {
+// Update user profile
+router.put('/profile', async (req, res) => {
   try {
-    const { email, password } = req.body;
-
-    const user = await User.findOne({ email });
-
-    if (user && (await user.matchPassword(password))) {
+    const user = await User.findById(req.user._id);
+    if (user) {
+      user.username = req.body.username || user.username;
+      user.email = req.body.email || user.email;
+      if (req.body.password) {
+        user.password = req.body.password;
+      }
+      const updatedUser = await user.save();
       res.json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        token: generateToken(user._id),
+        _id: updatedUser._id,
+        username: updatedUser.username,
+        email: updatedUser.email,
+        token: generateToken(updatedUser._id),
       });
     } else {
-      res.status(401).json({ message: 'Invalid email or password' });
+      res.status(404).json({ message: 'User not found' });
     }
   } catch (error) {
     console.error(error);

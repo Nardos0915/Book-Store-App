@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 
 const userSchema = new mongoose.Schema({
   username: {
@@ -51,6 +51,11 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
+// Delete the model if it exists to prevent recompilation errors
+if (mongoose.models.User) {
+  delete mongoose.models.User;
+}
+
 const User = mongoose.model('User', userSchema);
 
-module.exports = User; 
+export default User; 

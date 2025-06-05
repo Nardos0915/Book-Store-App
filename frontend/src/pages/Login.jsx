@@ -1,26 +1,44 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/axios';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
+
     try {
-      const response = await api.post('/users/login', {
-        email,
-        password,
-      });
-      login(response.data);
+      const response = await api.post('/auth/login', formData);
+      login(response.data.token, response.data.user);
       navigate('/');
     } catch (error) {
-      setError(error.response?.data?.message || 'An error occurred');
+      const errorMessage = error.response?.data?.message || 'Login failed';
+      setError(errorMessage);
+      
+      // If the error indicates unverified email, show a more helpful message
+      if (error.response?.data?.requiresVerification) {
+        setError('Please verify your email before logging in. Check your inbox for the verification link.');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -38,10 +56,12 @@ const Login = () => {
             </label>
             <input
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
               className="w-full rounded border border-gray-300 p-2"
               required
+              disabled={loading}
             />
           </div>
           <div className="mb-6">
@@ -50,17 +70,20 @@ const Login = () => {
             </label>
             <input
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
               className="w-full rounded border border-gray-300 p-2"
               required
+              disabled={loading}
             />
           </div>
           <button
             type="submit"
-            className="w-full rounded bg-blue-500 py-2 text-white hover:bg-blue-600"
+            className="w-full rounded bg-blue-500 py-2 text-white hover:bg-blue-600 disabled:opacity-50"
+            disabled={loading}
           >
-            Login
+            {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
         <p className="mt-4 text-center text-sm text-gray-600">

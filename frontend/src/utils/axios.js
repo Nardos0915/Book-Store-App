@@ -1,19 +1,35 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL:'https://book-store-app-5.onrender.com/api',
+  baseURL: 'https://book-store-app-5.onrender.com/api',
+  headers: {
+    'Content-Type': 'application/json'
+  }
 });
 
-// Add a request interceptor
+// Add a request interceptor to add the auth token to requests
 api.interceptors.request.use(
   (config) => {
-    const user = JSON.parse(localStorage.getItem('user'));
-    if (user?.token) {
-      config.headers.Authorization = `Bearer ${user.token}`;
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
   (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Add a response interceptor to handle 401 errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+    }
     return Promise.reject(error);
   }
 );

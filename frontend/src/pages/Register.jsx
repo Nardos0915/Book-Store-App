@@ -4,25 +4,42 @@ import { useAuth } from '../context/AuthContext';
 import api from '../utils/axios';
 
 const Register = () => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: ''
+  });
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { register } = useAuth();
 
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setSuccess('');
+    setLoading(true);
+
     try {
-      const response = await api.post('/users/register', {
-        name,
-        email,
-        password,
-      });
-      register(response.data);
-      navigate('/');
+      const response = await api.post('/auth/register', formData);
+      setSuccess(response.data.message || 'Registration successful! Please check your email to verify your account.');
+      // Don't automatically log in - wait for email verification
+      setTimeout(() => {
+        navigate('/login');
+      }, 3000);
     } catch (error) {
-      setError(error.response?.data?.message || 'An error occurred');
+      console.error('Registration error:', error.response?.data);
+      setError(error.response?.data?.message || 'Registration failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -33,17 +50,22 @@ const Register = () => {
         {error && (
           <div className="mb-4 rounded bg-red-100 p-3 text-red-700">{error}</div>
         )}
+        {success && (
+          <div className="mb-4 rounded bg-green-100 p-3 text-green-700">{success}</div>
+        )}
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label className="mb-2 block text-sm font-medium text-gray-700">
-              Name
+              Username
             </label>
             <input
               type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
               className="w-full rounded border border-gray-300 p-2"
               required
+              disabled={loading}
             />
           </div>
           <div className="mb-4">
@@ -52,10 +74,12 @@ const Register = () => {
             </label>
             <input
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
               className="w-full rounded border border-gray-300 p-2"
               required
+              disabled={loading}
             />
           </div>
           <div className="mb-6">
@@ -64,17 +88,21 @@ const Register = () => {
             </label>
             <input
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
               className="w-full rounded border border-gray-300 p-2"
               required
+              disabled={loading}
+              minLength="6"
             />
           </div>
           <button
             type="submit"
-            className="w-full rounded bg-blue-500 py-2 text-white hover:bg-blue-600"
+            className="w-full rounded bg-blue-500 py-2 text-white hover:bg-blue-600 disabled:opacity-50"
+            disabled={loading}
           >
-            Register
+            {loading ? 'Registering...' : 'Register'}
           </button>
         </form>
         <p className="mt-4 text-center text-sm text-gray-600">
