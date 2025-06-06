@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import api from '../utils/axios';
+import axios from 'axios';
+
+const API_URL = 'https://book-store-app-5.onrender.com';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -27,7 +29,7 @@ const Login = () => {
 
     try {
       console.log('Attempting login for:', formData.email);
-      const response = await api.post('/auth/login', formData);
+      const response = await axios.post(`${API_URL}/api/auth/login`, formData);
       console.log('Login response:', response.data);
       
       if (response.data.user && response.data.token) {

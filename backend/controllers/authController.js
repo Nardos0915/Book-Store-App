@@ -77,6 +77,7 @@ export const verifyEmail = async (req, res) => {
       return res.status(400).json({ message: 'Verification token is required' });
     }
 
+    // Find user with the verification token
     const user = await User.findOne({
       verificationToken: token,
       verificationTokenExpires: { $gt: Date.now() }
@@ -93,22 +94,32 @@ export const verifyEmail = async (req, res) => {
       isVerified: user.isVerified
     });
 
-    user.isVerified = true;
-    user.verificationToken = undefined;
-    user.verificationTokenExpires = undefined;
-    await user.save();
+    // Update user verification status
+    const updateResult = await User.findByIdAndUpdate(
+      user._id,
+      {
+        $set: {
+          isVerified: true,
+          verificationToken: undefined,
+          verificationTokenExpires: undefined
+        }
+      },
+      { new: true }
+    );
 
-    // Verify the save was successful
-    const updatedUser = await User.findById(user._id);
+    if (!updateResult) {
+      throw new Error('Failed to update user verification status');
+    }
+
     console.log('User after verification:', {
-      userId: updatedUser._id,
-      email: updatedUser.email,
-      isVerified: updatedUser.isVerified
+      userId: updateResult._id,
+      email: updateResult.email,
+      isVerified: updateResult.isVerified
     });
 
     // Generate JWT token after successful verification
     const authToken = jwt.sign(
-      { userId: user._id },
+      { userId: updateResult._id },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
@@ -117,9 +128,9 @@ export const verifyEmail = async (req, res) => {
       message: 'Email verified successfully',
       token: authToken,
       user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
+        id: updateResult._id,
+        username: updateResult.username,
+        email: updateResult.email,
         isVerified: true
       }
     });

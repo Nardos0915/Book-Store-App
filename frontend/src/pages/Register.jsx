@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import api from '../utils/axios';
+import axios from 'axios';
+
+const API_URL = 'https://book-store-app-5.onrender.com';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -29,14 +31,16 @@ const Register = () => {
     setLoading(true);
 
     try {
-      const response = await api.post('/auth/register', formData);
+      console.log('Attempting registration for:', formData.email);
+      const response = await axios.post(`${API_URL}/api/auth/register`, formData);
+      console.log('Registration response:', response.data);
       setSuccess(response.data.message || 'Registration successful! Please check your email to verify your account.');
       // Don't automatically log in - wait for email verification
       setTimeout(() => {
         navigate('/login');
       }, 3000);
     } catch (error) {
-      console.error('Registration error:', error.response?.data);
+      console.error('Registration error:', error.response?.data || error);
       setError(error.response?.data?.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);

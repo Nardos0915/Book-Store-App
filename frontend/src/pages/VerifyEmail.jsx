@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 
+const API_URL = 'https://book-store-app-5.onrender.com';
+
 const VerifyEmail = () => {
   const { token } = useParams();
   const navigate = useNavigate();
@@ -13,19 +15,23 @@ const VerifyEmail = () => {
   useEffect(() => {
     const verifyEmail = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/auth/verify-email/${token}`);
-        setMessage('Email verified successfully! Redirecting to login...');
+        console.log('Attempting to verify email with token:', token);
+        const response = await axios.get(`${API_URL}/api/auth/verify-email/${token}`);
+        console.log('Verification response:', response.data);
         
-        // Store the token and user data using the auth context
-        if (response.data.token && response.data.user) {
+        if (response.data.user && response.data.token) {
+          setMessage('Email verified successfully! Redirecting to home page...');
           login(response.data.token, response.data.user);
+          
+          // Redirect to home page after 2 seconds
+          setTimeout(() => {
+            navigate('/');
+          }, 2000);
+        } else {
+          throw new Error('Invalid response from server');
         }
-        
-        // Redirect to home page after 2 seconds
-        setTimeout(() => {
-          navigate('/');
-        }, 2000);
       } catch (error) {
+        console.error('Verification error:', error.response?.data || error);
         setError(error.response?.data?.message || 'Error verifying email. Please try again.');
       }
     };
@@ -49,6 +55,11 @@ const VerifyEmail = () => {
           {error ? (
             <div className="rounded-md bg-red-50 p-4">
               <div className="text-sm text-red-700">{error}</div>
+              <div className="mt-2">
+                <a href="/login" className="text-sm text-blue-600 hover:text-blue-500">
+                  Return to Login
+                </a>
+              </div>
             </div>
           ) : (
             <div className="rounded-md bg-green-50 p-4">
