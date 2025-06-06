@@ -87,11 +87,24 @@ export const verifyEmail = async (req, res) => {
       return res.status(400).json({ message: 'Invalid or expired verification token' });
     }
 
+    console.log('Found user before verification:', {
+      userId: user._id,
+      email: user.email,
+      isVerified: user.isVerified
+    });
+
     user.isVerified = true;
     user.verificationToken = undefined;
     user.verificationTokenExpires = undefined;
     await user.save();
-    console.log('Email verified successfully for user:', user._id);
+
+    // Verify the save was successful
+    const updatedUser = await User.findById(user._id);
+    console.log('User after verification:', {
+      userId: updatedUser._id,
+      email: updatedUser.email,
+      isVerified: updatedUser.isVerified
+    });
 
     // Generate JWT token after successful verification
     const authToken = jwt.sign(
@@ -106,7 +119,8 @@ export const verifyEmail = async (req, res) => {
       user: {
         id: user._id,
         username: user.username,
-        email: user.email
+        email: user.email,
+        isVerified: true
       }
     });
   } catch (error) {
@@ -137,6 +151,12 @@ export const login = async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
+    console.log('Found user during login:', {
+      userId: user._id,
+      email: user.email,
+      isVerified: user.isVerified
+    });
+
     // Check if email is verified
     if (!user.isVerified) {
       console.log('Unverified email attempt:', email);
@@ -160,13 +180,19 @@ export const login = async (req, res) => {
       { expiresIn: '24h' }
     );
 
-    console.log('Login successful for user:', user._id);
+    console.log('Login successful for user:', {
+      userId: user._id,
+      email: user.email,
+      isVerified: user.isVerified
+    });
+
     res.json({
       token: authToken,
       user: {
         id: user._id,
         username: user.username,
-        email: user.email
+        email: user.email,
+        isVerified: user.isVerified
       }
     });
   } catch (error) {

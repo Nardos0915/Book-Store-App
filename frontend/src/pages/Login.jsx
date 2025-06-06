@@ -26,10 +26,18 @@ const Login = () => {
     setLoading(true);
 
     try {
+      console.log('Attempting login for:', formData.email);
       const response = await api.post('/auth/login', formData);
-      login(response.data.token, response.data.user);
-      navigate('/');
+      console.log('Login response:', response.data);
+      
+      if (response.data.user && response.data.token) {
+        login(response.data.token, response.data.user);
+        navigate('/');
+      } else {
+        throw new Error('Invalid response from server');
+      }
     } catch (error) {
+      console.error('Login error:', error.response?.data || error);
       const errorMessage = error.response?.data?.message || 'Login failed';
       setError(errorMessage);
       
