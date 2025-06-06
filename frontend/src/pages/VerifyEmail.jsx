@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 const VerifyEmail = () => {
   const { token } = useParams();
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [message, setMessage] = useState('Verifying your email...');
   const [error, setError] = useState(null);
 
@@ -13,13 +15,15 @@ const VerifyEmail = () => {
       try {
         const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/auth/verify-email/${token}`);
         setMessage('Email verified successfully! Redirecting to login...');
-        // Store the token if needed
-        if (response.data.token) {
-          localStorage.setItem('token', response.data.token);
+        
+        // Store the token and user data using the auth context
+        if (response.data.token && response.data.user) {
+          login(response.data.token, response.data.user);
         }
-        // Redirect to login after 2 seconds
+        
+        // Redirect to home page after 2 seconds
         setTimeout(() => {
-          navigate('/login');
+          navigate('/');
         }, 2000);
       } catch (error) {
         setError(error.response?.data?.message || 'Error verifying email. Please try again.');
@@ -31,7 +35,7 @@ const VerifyEmail = () => {
     } else {
       setError('Invalid verification link');
     }
-  }, [token, navigate]);
+  }, [token, navigate, login]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
